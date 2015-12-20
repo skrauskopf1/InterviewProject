@@ -1,0 +1,176 @@
+﻿@using InterviewProject.Models
+@model List<User>
+@{
+    ViewBag.Title = "Home Page";
+}          
+
+<script type="text/javascript">
+
+    $(document).ready(function () {                
+        $("#UserInfoDialog").dialog({
+            modal: true,
+            width: 300,
+            height: 300,
+            autoOpen: false,
+            resizable: false
+        });        
+    });
+
+    function Add() {        
+        ClearDataDialog();        
+        OpenDataDialog(0);      
+    }
+
+    function Edit(id){
+        PopulateDataDialog(id);
+        OpenDataDialog(id);
+    }
+
+    function ClearDataDialog() {
+        $("input[name='data.ID']").val("0").next("span").text("");
+        $("input[name='data.Name']").val("");
+        $("input[name='data.DOB']").val("");
+        $("input[name='data.Phone']").val("");
+    }
+
+    function PopulateDataDialog(id) {        
+        $("input[name='data.ID']").val($("#" + id).find("td[name='ID']").text()).next("span").text($("#" + id).find("td[name='ID']").text());
+        $("input[name='data.Name']").val($("#" + id).find("td[name='Name']").text());
+        $("input[name='data.DOB']").val($("#" + id).find("td[name='DOB']").text());
+        $("input[name='data.Phone']").val($("#" + id).find("td[name='Phone']").text());
+    }
+
+    function OpenDataDialog(id) {        
+        $("#UserInfoDialog").dialog('option', 'buttons', {
+            "Save": function () {                               
+                SaveUser(id);
+            },
+            "Cancel": function () {
+                $("#UserInfoDialog").dialog("close");
+            }
+        });       
+        
+        $("#UserInfoDialog").dialog("open");
+    }
+    
+    function Delete(id) {
+        $.ajax({
+            async: true,
+            type: "post",
+            url: "@(Url.Action("DeleteUser", "Home"))",
+            dataType: "json",
+            data: { ID: id },
+            success: function (result) {                
+                if (result) {
+                    $("#" + id).remove();
+                } else {
+                    alert("Error deleting user");
+                }
+            }
+        });
+
+    }
+
+    function SaveUser(id) {
+        if (ValidateForm()) {
+            $.ajax({
+                async: true,
+                url: '@(Url.Action("SaveUser", "Home"))',
+                data: $("#UserInfoForm").serialize(),
+                success: function (data) {
+                    if (id == 0) {
+                        $("#UserTable tbody").append(data);
+                    } else {
+                        $("#" + id).replaceWith(data);
+                    }
+                    $("#UserInfoDialog").dialog("close");
+                }
+            });
+        }
+    }
+
+    function ValidateForm() {
+
+        var Name = $("input[name='data.Name']").val().trim();
+        if (Name.length == 0) {
+            alert("Name required");
+            return false;
+        }
+
+        var DOB = $("input[name='data.DOB']").val().trim();
+        var regdate = /^([0]?[1-9]|[1][0-2])[./-]([0]?[1-9]|[1|2][0-9]|[3][0|1])[./-]([0-9]{4}|[0-9]{2})$/;
+        if (DOB.length == 0) {
+            alert("DOB required");
+            return false;
+        }
+        else if (!regdate.test(DOB)) {
+            alert("Invalid DOB: " + DOB);
+            return false;
+        }
+
+        var phone = $("input[name='data.Phone']").val().trim();
+        var regphone = /[0-9 -()+]+$/;
+        if (phone.length == 0) {
+            alert("Phone required");
+            return false;
+        }
+        else if (!regphone.test(phone)) {
+            alert("Invalid phone number: " + phone);
+            return false;
+        }
+        
+        return true;
+    }
+
+</script>
+
+<style>
+    table, tr, th, td {
+        border: 1px solid black;
+    }   
+
+</style>
+
+<input type="button" value="Add User" onclick="Add();" />
+<br />
+<br />
+<table id="UserTable" style="width:800px">
+    <thead>
+        <tr>
+            <th style="width:10%" >Action</th>
+            <th style="width:5%" >ID</th>
+            <th style="width:55%" >Name</th>
+            <th style="width:15%" >Date of Birth</th>
+            <th style="width:15%" >Phone Number</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach(User user in Model)
+        {
+            Html.RenderPartial("UserRow", user);
+        }
+    </tbody>
+</table>
+
+<div id="UserInfoDialog" title="User Information" style="display:none"> 
+    <form id="UserInfoForm" action="@(Url.Action("SaveUser","Home"))" >
+        <table>
+            <tr>
+                <td>ID:</td>
+                <td><input type="hidden" name="data.ID" value="" maxlength="50" /><span></span></td>
+            </tr>
+            <tr>
+                <td>Name:</td>
+                <td><input type="text" name="data.Name" value="" /></td>
+            </tr>
+            <tr>
+                <td>DOB:</td>
+                <td><input type="text" name="data.DOB" value="" /></td>
+            </tr>
+            <tr>
+                <td>Phone:</td>
+                <td><input type="text" name="data.Phone" value="" maxlength="20" /></td>
+            </tr>
+        </table>
+    </form>  
+</div>

@@ -1,0 +1,12 @@
+﻿@using InterviewProject.Models;
+@model User
+
+<tr id="@Model.ID">
+    <td>
+        <a onclick="Edit(@Model.ID);">edit</a> | <a onclick="Delete(@Model.ID);">delete</a>      
+    </td>
+    <td name="ID">@Model.ID</td>
+    <td name="Name">@Model.Name</td>
+    <td name="DOB">@Model.DOB.ToShortDateString()</td>
+    <td name="Phone">@Model.Phone</td>
+</tr>
